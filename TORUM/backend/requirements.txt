@@ -1,0 +1,15 @@
+fastapi
+sqlalchemy
+uvicorn
+pydantic
+python-dotenv
+jwt
+pydantic[email]
+psycopg2-binary
+passlib
+bcrypt
+python-jose
+python-multipart
+asyncpg
+sqlalchemy[asyncio]
+alembic

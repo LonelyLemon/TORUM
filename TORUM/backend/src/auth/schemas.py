@@ -1,4 +1,8 @@
+from uuid import UUID
+
 from pydantic import BaseModel, EmailStr
+
+
 
 class UserCreate(BaseModel):
     username: str
@@ -6,13 +10,9 @@ class UserCreate(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
-    id: int
+    user_id: UUID
     username: str
     email: EmailStr
 
     class Config:
         from_attributes = True
-    
-class Token(BaseModel):
-    access_token: str
-    token_type: str
