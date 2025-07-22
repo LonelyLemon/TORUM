@@ -16,3 +16,11 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PostCreate(BaseModel):
+    post_title: str
+    post_content: str
+
+class PostUpdate(BaseModel):
+    post_title: str
+    post_content: str

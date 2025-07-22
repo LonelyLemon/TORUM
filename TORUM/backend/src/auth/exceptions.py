@@ -36,3 +36,10 @@ class BlacklistedToken(HTTPException):
             status_code=401,
             detail="Token has been revoked !"
         )
+
+class PostNotFound(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=404,
+            detail="Post not found !"
+        )
