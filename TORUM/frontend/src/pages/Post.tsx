@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { createPost, getPost, updatePost, deletePost } from "../services/api";
 import { type Post } from "../types";
 
-const Post: React.FC = () => {
+const Posts: React.FC = () => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [postID, setPostID] = useState('');
@@ -79,7 +79,7 @@ const Post: React.FC = () => {
 
     return (
     <div className="container mx-auto p-4">
-        <h2 className="text-2xl font-bold text-center mb-4">My Post</h2>
+        <h2 className="text-2xl font-bold text-center mb-4">Post Manager</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
         {/* Create Post Form */}
@@ -183,4 +183,4 @@ const Post: React.FC = () => {
   );
 };
 
-export default Post;
+export default Posts

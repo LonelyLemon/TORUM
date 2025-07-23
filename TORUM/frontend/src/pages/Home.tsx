@@ -5,7 +5,6 @@ const Home: React.FC = () => {
                 Welcome to TORUM
             </h1>
             <p className="text-center mt-4">
-                Welcome to Homepage. Please Login or Sign Up.
             </p>
         </div>
     );

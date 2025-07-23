@@ -9,14 +9,14 @@ const api = axios.create ({
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) {
-        config.headers.Authorization = 'Bearer ${token}';
+        config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
 });
 
 export const login = async (credentials: LoginCredentials) => {
     const formData = new URLSearchParams();
-    formData.append('email', credentials.email);
+    formData.append('username', credentials.email);
     formData.append('password', credentials.password);
     const response = await api.post<AuthResponse>('/login', formData, {
         headers: {

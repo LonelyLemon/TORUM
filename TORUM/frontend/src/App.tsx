@@ -5,7 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Post from './pages/Post';
+import Posts from './pages/Post';
 
 function App() {
   return (
@@ -19,7 +19,7 @@ function App() {
           path="/post" 
           element={
             <ProtectedRoute>
-              <Post />
+              <Posts />
             </ProtectedRoute>
           } 
         />

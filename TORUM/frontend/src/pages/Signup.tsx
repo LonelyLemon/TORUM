@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../context/AuthContext";
 import { signup } from "../services/api"; 
 
 const Signup: React.FC = () => {
@@ -9,15 +8,13 @@ const Signup: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
         try {
-            const user = await signup({ username, email, password })
-            login('', user);
+            await signup({ username, email, password })
             navigate('/login');
         } catch (err : any) {
             if (err.response && err.response.data && err.response.data.detail) {

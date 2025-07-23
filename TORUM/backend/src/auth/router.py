@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from ..database import get_db
+from database import get_db
 from .exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound
 from .models import User, Token_Blacklist, Post, Refresh_Token
 from .schemas import UserCreate, UserResponse, PostCreate, PostUpdate
@@ -27,7 +27,7 @@ async def register(user: UserCreate,
     new_user = User(
         username = user.username,
         email = user.email,
-        password = hashed_pw
+        hashed_password = hashed_pw
     )
     db.add(new_user)
     await db.commit()
@@ -54,7 +54,7 @@ async def login(login_request: OAuth2PasswordRequestForm = Depends(),
     access_token = create_access_token(data={"sub": user.email})
     refresh_token = create_refresh_token(data={"sub": user.email})
     new_refresh_token = Refresh_Token(
-        token = refresh_token,
+        refresh_token = refresh_token,
         user_id = user.user_id
     )
     db.add(new_refresh_token)

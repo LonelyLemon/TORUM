@@ -17,7 +17,7 @@ const Login: React.FC = () => {
         try {
             const data = await login({ email, password });
             authLogin(data.access_token, { user_id: '', email, username: '' });
-            navigate('/posts');
+            navigate('/post');
         } catch (err) {
             setError('Invalid email or password !');
         }
@@ -31,7 +31,7 @@ const Login: React.FC = () => {
                 <div className="mb-4">
                 <label className="block mb-1">Email</label>
                 <input
-                    type="text"
+                    type="email"
                     value={email}    
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter email"
