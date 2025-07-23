@@ -8,7 +8,7 @@ from .auth import router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.connect() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.drop_all)     #Only for development phase
         await conn.run_sync(Base.metadata.create_all)
     yield
 
@@ -24,3 +24,4 @@ app.include_router(router.register_route)
 app.include_router(router.login_route)
 app.include_router(router.logout_route)
 app.include_router(router.get_user_route)
+app.include_router(router.post_route)

@@ -2,7 +2,7 @@ import React, { type FormEvent, useState } from "react";
 
 import { useAuth } from "../context/AuthContext";
 import { createPost, getPost, updatePost, deletePost } from "../services/api";
-import { type PostCreate, type Post } from "../types";
+import { type Post } from "../types";
 
 const Post: React.FC = () => {
     const [title, setTitle] = useState('');
