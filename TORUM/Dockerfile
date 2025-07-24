@@ -1,5 +1,5 @@
-# Use an official Python runtime as a parent image
-FROM python:3.10-slim
+# Parent image
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
 # Set the working directory in the container
 WORKDIR /app

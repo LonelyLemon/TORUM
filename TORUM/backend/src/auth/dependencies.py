@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from jose import JWTError
 
-from database import get_db
+from ..database import get_db
 from .models import Token_Blacklist, User
 from .exceptions import CredentialException, InvalidUser, BlacklistedToken
 from .services import decode_access_token

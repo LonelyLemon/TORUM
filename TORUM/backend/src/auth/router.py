@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from database import get_db
+from ..database import get_db
 from .exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound
 from .models import User, Token_Blacklist, Post, Refresh_Token
 from .schemas import UserCreate, UserResponse, PostCreate, PostUpdate
