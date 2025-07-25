@@ -157,6 +157,13 @@ async def delete_post(id: str,
     await db.delete(post)
     await db.commit()
     return {"message": "Post deleted successfully !"}
+
+@post_route.get('/my-posts')
+async def get_my_posts(db: AsyncSession = Depends(get_db),
+                       current_user: UserResponse = Depends(get_current_user)):
+    result = await db.execute(select(Post).where(Post.post_owner == current_user.user_id))
+    posts = result.scalars().all()
+    return posts
 ####     END POST ROUTE     ####
 
 #---------------------------------------------------------------#

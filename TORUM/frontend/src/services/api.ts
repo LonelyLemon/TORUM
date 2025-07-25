@@ -41,6 +41,11 @@ export const getPost = async (id: string) => {
   return response.data;
 };
 
+export const getMyPosts = async() => {
+  const response = await api.get<Post[]>('my-posts');
+  return response.data;
+}
+
 export const updatePost = async (id: string, post: PostUpdate) => {
   const response = await api.put<{ message: string }>(`/update-post/${id}`, post);
   return response.data;
