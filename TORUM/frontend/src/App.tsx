@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Posts from './pages/Post';
 import ViewPost from './pages/PostView';
+import AccountManagement from './pages/AccountManagement';
 
 function App() {
   return (
@@ -25,10 +26,18 @@ function App() {
           } 
         />
         <Route 
-          path="/view-post/:id"
+          path="/view-post"
           element={
             <ProtectedRoute>
               <ViewPost />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <AccountManagement />
             </ProtectedRoute>
           }
         />

@@ -2,7 +2,7 @@ import React, { type FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
-import { createPost, getPost, updatePost, deletePost } from "../services/api";
+import { createPost } from "../services/api";
 import { type Post } from "../types";
 
 const Posts: React.FC = () => {
@@ -10,9 +10,6 @@ const Posts: React.FC = () => {
     const [content, setContent] = useState('');
     const [postID, setPostID] = useState('');
     const [post, setPost] = useState<Post | null>(null);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editTitle, setEditTitle] = useState('');
-    const [editContent, setEditContent] = useState('');
     const [error, setError] = useState(''); 
     const { user } = useAuth();
 
@@ -32,23 +29,6 @@ const Posts: React.FC = () => {
             setError(err.response?.data?.detail || 'Failed to create post');
         }
     };
-
-    // View Post
-    const handleFetch = async () => {
-        if (!postID) {
-            setError('Post ID not found !');
-            return;
-        }
-        setError('');
-        try {
-            const fetchedPost = await getPost(postID)
-            setPost(fetchedPost);
-            setIsEditing(false);
-        } catch (err: any) {
-            setError(err.response?.data?.detail || 'Failed to view post !')
-        }
-    };
-
 
     return (
     <div className="container mx-auto p-4">
@@ -84,7 +64,7 @@ const Posts: React.FC = () => {
 
         {/* View Post*/}
         <div className="max-w-md mx-auto mt-4">
-            <Link to={`/view-post/${post?.post_id}`} className="text-blue-600 hover:underline">
+            <Link to={`/view-post`} className="text-blue-600 hover:underline">
                 View Post
             </Link>
         </div>

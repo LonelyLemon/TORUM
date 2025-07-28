@@ -1,6 +1,9 @@
 import axios from "axios";
 
-import type { User, AuthResponse, LoginCredentials, SignupCredentials, Post, PostCreate, PostUpdate } from "../types/index";
+import type { User, UserUpdate, 
+              AuthResponse, LoginCredentials, SignupCredentials, 
+              Post, PostCreate, PostUpdate 
+            } from "../types/index";
 
 const api = axios.create ({
     baseURL: "http://127.0.0.1:8000",
@@ -36,22 +39,27 @@ export const createPost = async (post: PostCreate) => {
   return response.data;
 };
 
-export const getPost = async (id: string) => {
-  const response = await api.get<Post>(`/view-post/${id}`);
-  return response.data;
-};
-
 export const getMyPosts = async() => {
-  const response = await api.get<Post[]>('my-posts');
+  const response = await api.get<Post[]>('/my-posts');
   return response.data;
 }
 
 export const updatePost = async (id: string, post: PostUpdate) => {
-  const response = await api.put<{ message: string }>(`/update-post/${id}`, post);
+  const response = await api.put<{ message: string | undefined}>(`/update-post/${id}`, post);
   return response.data;
 };
 
 export const deletePost = async (id: string) => {
   const response = await api.delete<{ message: string }>(`/delete-post/${id}`);
   return response.data;
+};
+
+export const getUser = async () => {
+    const response = await api.get<User>('/me');
+    return response.data;
+};
+
+export const updateUser = async (update_data: UserUpdate): Promise<{ message: string | undefined}> => {
+    const response = await api.put('/update-user', update_data);
+    return response.data;
 };

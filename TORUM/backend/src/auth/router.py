@@ -6,7 +6,7 @@ from sqlalchemy.future import select
 from ..database import get_db
 from .exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound
 from .models import User, Token_Blacklist, Post, Refresh_Token
-from .schemas import UserCreate, UserResponse, PostCreate, PostUpdate
+from .schemas import UserCreate, UserUpdate, UserResponse, PostCreate, PostUpdate
 from .services import get_password_hash, verify_password, create_access_token, create_refresh_token
 from .dependencies import get_current_user, oauth2_scheme
 
@@ -90,15 +90,31 @@ async def logout(token: str = Depends(oauth2_scheme),
 
 #---------------------------------------------------------------#
 
-####     GET USER ROUTE     #####
+####     USER ROUTE     #####
 get_user_route = APIRouter(
     tags=["Get_user"]
 )
 
-@get_user_route.get('/me', response_model=UserResponse)
+@get_user_route.get('/me')
 async def get_user(current_user: UserResponse = Depends(get_current_user)):
     return current_user
-####     END GET USER ROUTE     #####
+
+@get_user_route.put('/update-user')
+async def update_user(update_request: UserUpdate,
+                      db: AsyncSession = Depends(get_db),
+                      current_user: UserResponse = Depends(get_current_user)):
+    result = await db.execute(select(User).where(User.user_id == current_user.user_id))
+    curr_user = result.scalars().first()
+    update_data = update_request.dict(exclude_unset=True)
+
+    if "password" in update_data:
+        update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
+    for key, value in update_data.items():
+        setattr(curr_user, key, value)
+    await db.commit()
+    await db.refresh(curr_user)
+    return {"message": "User updated successfully !"}
+####     END USER ROUTE     #####
 
 #---------------------------------------------------------------#
 
@@ -138,9 +154,10 @@ async def update_post(id: str,
                       current_user: UserResponse = Depends(get_current_user)):
     result = await db.execute(select(Post).where(Post.post_id == id, Post.post_owner == current_user.user_id))
     post = result.scalars().first()
+    update_data = update_request.dict(exclude_unset=True)
     if not post:
         raise PostNotFound()
-    for key, value in update_request.dict().items():
+    for key, value in update_data.dict().items():
         setattr(post, key, value)
     await db.commit()
     await db.refresh(post)
