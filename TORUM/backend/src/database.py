@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from typing import AsyncGenerator
 
-from .config import get_settings
+from backend.src.config import get_settings
 
 settings = get_settings()
 

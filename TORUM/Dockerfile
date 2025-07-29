@@ -27,4 +27,4 @@ ENTRYPOINT []
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "backend.src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "cd /app && alembic upgrade head && uvicorn backend.src.main:app --host 0.0.0.0 --port 8000"]

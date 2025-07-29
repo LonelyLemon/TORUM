@@ -2,7 +2,7 @@ from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timezone, timedelta
 
-from .config import JWT_ALGORITHM, JWT_EXPIRATION_HOURS, JWT_SECRET_KEY, REFRESH_TOKEN_HOURS
+from backend.src.auth.config import JWT_ALGORITHM, JWT_EXPIRATION_HOURS, JWT_SECRET_KEY, REFRESH_TOKEN_HOURS
 
 
 pwd_context = CryptContext(schemes="bcrypt", deprecated="auto")

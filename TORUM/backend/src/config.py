@@ -1,3 +1,4 @@
+from pydantic import Extra
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 from pathlib import Path
@@ -18,6 +19,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = Path(__file__).resolve().parents[2]/".env"
+        extra = Extra.allow
 
 @lru_cache()
 def get_settings() -> Settings:

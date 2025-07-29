@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from jose import JWTError
 
-from ..database import get_db
-from .models import Token_Blacklist, User
-from .exceptions import CredentialException, InvalidUser, BlacklistedToken
-from .services import decode_access_token
+from backend.src.database import get_db
+from backend.src.auth.models import Token_Blacklist, User
+from backend.src.auth.exceptions import CredentialException, InvalidUser, BlacklistedToken
+from backend.src.auth.services import decode_access_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
