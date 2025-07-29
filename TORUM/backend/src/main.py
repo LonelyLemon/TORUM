@@ -7,12 +7,12 @@ from .auth import router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    try:
-        async with engine.connect() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-    except Exception as e:
-        print(f"Database setup failed: {e}")
-        raise
+    # try:
+    #     async with engine.connect() as conn:
+    #         await conn.run_sync(Base.metadata.create_all)
+    # except Exception as e:
+    #     print(f"Database setup failed: {e}")
+    #     raise
     yield
 
 app = FastAPI(lifespan=lifespan)
