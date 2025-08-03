@@ -1,8 +1,15 @@
-from ..config import get_settings
+from backend.src.config import get_settings
 
 settings = get_settings()
 
+#JWT
 JWT_SECRET_KEY = settings.JWT_SECRET_KEY
 JWT_ALGORITHM = settings.JWT_ALGORITHM
 JWT_EXPIRATION_HOURS = settings.JWT_EXPIRATION_HOURS
 REFRESH_TOKEN_HOURS = settings.REFRESH_TOKEN_HOURS
+
+#AWS USER
+AWS_SECRET_ACCESS_KEY = settings.AWS_SECRET_ACCESS_KEY
+AWS_ACCESS_KEY = settings.AWS_ACCESS_KEY
+AWS_REGION = settings.AWS_REGION
+S3_BUCKET = settings.S3_BUCKET

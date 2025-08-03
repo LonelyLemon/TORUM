@@ -10,12 +10,19 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str
     POSTGRES_PORT: str
     POSTGRES_DB: str
+    SQLALCHEMY_DATABASE_URL: str
 
-    #JWT
+    # JWT
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_HOURS: int
     REFRESH_TOKEN_HOURS: int
+
+    # AWS USER
+    AWS_SECRET_ACCESS_KEY: str
+    AWS_ACCESS_KEY: str
+    AWS_REGION: str
+    S3_BUCKET: str
 
     class Config:
         env_file = Path(__file__).resolve().parents[2]/".env"

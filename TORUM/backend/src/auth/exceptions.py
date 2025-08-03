@@ -9,6 +9,13 @@ class CredentialException(HTTPException):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+class PermissionException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=403,
+            detail="Permission Denied !"
+        )
+
 class UserExistedCheck(HTTPException):
     def __init__(self):
         super().__init__(
@@ -42,4 +49,25 @@ class PostNotFound(HTTPException):
         super().__init__(
             status_code=404,
             detail="Post not found !"
+        )
+
+class FileUploadFailed(HTTPException):
+    def __init__(self, detail="Upload File to AWS S3 Failed"):
+        super().__init__(
+            status_code=500,
+            detail=detail
+        )
+
+class DocumentNotFound(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=404,
+            detail="Document not found !"
+        )
+
+class PresignedURLFailed(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=500,
+            detail="Generate presigned URL failed !"
         )

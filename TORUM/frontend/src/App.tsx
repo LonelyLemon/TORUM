@@ -8,6 +8,9 @@ import Signup from './pages/Signup';
 import Posts from './pages/Post';
 import ViewPost from './pages/PostView';
 import AccountManagement from './pages/AccountManagement';
+import UploadDocument from './pages/UploadDocument';
+import DocumentList from './pages/DocumentList';
+import Search from './pages/Search';
 
 function App() {
   return (
@@ -17,6 +20,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/search" element={<Search />} />
         <Route 
           path="/post" 
           element={
@@ -38,6 +42,22 @@ function App() {
           element={
             <ProtectedRoute>
               <AccountManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/view-document"
+          element={
+            <ProtectedRoute>
+              <DocumentList />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/upload-document"
+          element={
+            <ProtectedRoute>
+              <UploadDocument />
             </ProtectedRoute>
           }
         />

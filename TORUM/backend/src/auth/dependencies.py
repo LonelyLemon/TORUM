@@ -3,11 +3,13 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from jose import JWTError
+from typing import List
 
 from backend.src.database import get_db
 from backend.src.auth.models import Token_Blacklist, User
-from backend.src.auth.exceptions import CredentialException, InvalidUser, BlacklistedToken
+from backend.src.auth.exceptions import CredentialException, InvalidUser, BlacklistedToken, PermissionException
 from backend.src.auth.services import decode_access_token
+from backend.src.auth.schemas import UserResponse
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
@@ -29,3 +31,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
     if blacklisted:
         raise BlacklistedToken()
     return user
+
+async def require_role(required_roles: List[str]):
+    async def role_checker(current_user: UserResponse = Depends(get_current_user)):
+        if current_user.user_role not in required_roles:
+            raise PermissionException()
+        return current_user
+    return role_checker

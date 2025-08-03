@@ -50,3 +50,28 @@ export interface PostUpdate {
     post_title: string;
     post_content: string;
 };
+
+/*---------------------------------------------------------------*/
+
+export interface ReadingDocumentUpload {
+    docs_title: string;
+    docs_description?: string;
+    docs_tags: string;
+}
+
+export interface ReadingDocumentResponse {
+    docs_id: string;
+    docs_owner: string;
+    docs_title: string;
+    docs_description: string;
+    docs_tags: string;
+    docs_file_path: string;
+    uploaded_at: string;
+}
+
+/*---------------------------------------------------------------*/
+
+export interface Search {
+    post_result: Post[];
+    document_result: ReadingDocumentResponse[];
+}
