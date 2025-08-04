@@ -6,11 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from backend.src.database import get_db
-from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed
+from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed, InvalidRole, PermissionException
 from backend.src.auth.models import User, Token_Blacklist, Post, Refresh_Token, Reading_Documents
 from backend.src.auth.schemas import UserCreate, UserUpdate, UserResponse, PostCreate, PostUpdate, Reading_Documents_Upload, Reading_Documents_Response
 from backend.src.auth.services import get_password_hash, verify_password, create_access_token, create_refresh_token
-from backend.src.auth.dependencies import get_current_user, oauth2_scheme
+from backend.src.auth.dependencies import require_role, oauth2_scheme
 from backend.src.auth.utils import upload_file_to_s3, generate_presigned_url
 
 #---------------------------------------------------------------#
@@ -80,7 +80,7 @@ logout_route = APIRouter(
 @logout_route.post('/logout')
 async def logout(token: str = Depends(oauth2_scheme), 
                  db: AsyncSession = Depends(get_db), 
-                 current_user: UserResponse = Depends(get_current_user)):
+                 current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
     blacklisted = Token_Blacklist(token = token)
     db.add(blacklisted)
     await db.commit()
@@ -100,13 +100,13 @@ get_user_route = APIRouter(
 )
 
 @get_user_route.get('/me')
-async def get_user(current_user: UserResponse = Depends(get_current_user)):
+async def get_user(current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
     return current_user
 
 @get_user_route.put('/update-user')
 async def update_user(update_request: UserUpdate,
                       db: AsyncSession = Depends(get_db),
-                      current_user: UserResponse = Depends(get_current_user)):
+                      current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
     result = await db.execute(select(User).where(User.user_id == current_user.user_id))
     curr_user = result.scalar_one_or_none()
     update_data = update_request.model_dump(exclude_unset=True)
@@ -118,6 +118,24 @@ async def update_user(update_request: UserUpdate,
     await db.commit()
     await db.refresh(curr_user)
     return curr_user
+
+@get_user_route.put('/update-user-role/{user_id}')
+async def update_user_role(user_id: str, 
+                           new_role: str, 
+                           db: AsyncSession = Depends(get_db), 
+                           current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
+    if current_user.user_role != "admin":
+        raise PermissionException()
+    if new_role not in ["user", "moderator", "admin"]:
+        raise InvalidRole()
+    result = await db.execute(select(User).where(User.user_id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise InvalidUser()
+    user.user_role = new_role
+    await db.commit()
+    await db.refresh(user)
+    return user
 ####     END USER ROUTE     #####
 
 #---------------------------------------------------------------#
@@ -130,7 +148,7 @@ post_route = APIRouter(
 @post_route.post('/create-post')
 async def create_post(post: PostCreate, 
                       db: AsyncSession = Depends(get_db), 
-                      current_user: UserResponse = Depends(get_current_user)):
+                      current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
     new_post = Post(
         post_owner = current_user.user_id,
         post_title = post.post_title,
@@ -155,8 +173,11 @@ async def view_post(id: str,
 async def update_post(id: str, 
                       update_request: PostUpdate, 
                       db: AsyncSession = Depends(get_db), 
-                      current_user: UserResponse = Depends(get_current_user)):
-    result = await db.execute(select(Post).where(Post.post_id == id, Post.post_owner == current_user.user_id))
+                      current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
+    if current_user.user_role == "admin":
+        result = await db.execute(select(Post).where(Post.post_id == id))
+    else:
+        result = await db.execute(select(Post).where(Post.post_id == id, Post.post_owner == current_user.user_id))
     post = result.scalar_one_or_none()
     update_data = update_request.model_dump(exclude_unset=True)
     if post is None:
@@ -170,8 +191,11 @@ async def update_post(id: str,
 @post_route.delete('/delete-post/{id}')
 async def delete_post(id: str, 
                       db: AsyncSession = Depends(get_db), 
-                      current_user: UserResponse = Depends(get_current_user)):
-    result = await db.execute(select(Post).where(Post.post_id == id, Post.post_owner == current_user.user_id))
+                      current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
+    if current_user.user_role == ["moderator", "admin"]:
+        result = await db.execute(select(Post).where(Post.post_id == id))
+    else:
+        result = await db.execute(select(Post).where(Post.post_id == id, Post.post_owner == current_user.user_id))
     post = result.scalar_one_or_none()
     if not post:
         raise PostNotFound()
@@ -181,7 +205,7 @@ async def delete_post(id: str,
 
 @post_route.get('/my-posts')
 async def get_my_posts(db: AsyncSession = Depends(get_db),
-                       current_user: UserResponse = Depends(get_current_user)):
+                       current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
     result = await db.execute(select(Post).where(Post.post_owner == current_user.user_id))
     posts = result.scalars().all()
     return posts
@@ -198,7 +222,7 @@ reading_documents_route = APIRouter(
 async def upload_reading_documents(docs: Reading_Documents_Upload,
                                    file: UploadFile = File(...),
                                    db: AsyncSession = Depends(get_db), 
-                                   current_user: UserResponse = Depends(get_current_user)):
+                                   current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
     s3_key = f"{current_user.user_id}/{file.filename}"
     upload_result = upload_file_to_s3(file.file, s3_key, file.content_type)
 
@@ -219,9 +243,8 @@ async def upload_reading_documents(docs: Reading_Documents_Upload,
 
 @reading_documents_route.get('/download-document/{doc_id}')
 async def download_document(doc_id: str, 
-                            db: AsyncSession = Depends(get_db),
-                            current_user: UserResponse = Depends(get_current_user)):
-    result = await db.execute(select(Reading_Documents).where(Reading_Documents.docs_id == doc_id, Reading_Documents.docs_owner == current_user.user_id))
+                            db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Reading_Documents).where(Reading_Documents.docs_id == doc_id))
     document = result.scalar_one_or_none()
 
     if not document:
@@ -235,7 +258,7 @@ async def download_document(doc_id: str,
 
 @reading_documents_route.get('/my-reading-documents')
 async def get_my_documents(db: AsyncSession = Depends(get_db), 
-                           current_user: UserResponse = Depends(get_current_user)):
+                           current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
     result = await db.execute(select(Reading_Documents).where(Reading_Documents.docs_owner == current_user.user_id))
     docs = result.scalars().all()
     return docs

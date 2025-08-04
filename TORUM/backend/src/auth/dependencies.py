@@ -14,7 +14,7 @@ from backend.src.auth.schemas import UserResponse
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 async def get_current_user(token: str = Depends(oauth2_scheme), 
-                           db: AsyncSession = Depends(get_db)) -> str:
+                           db: AsyncSession = Depends(get_db)):
     try:
         payload = decode_access_token(token)
         email: str = payload.get("sub")
@@ -23,16 +23,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
     except JWTError:
         raise CredentialException()
     result = await db.execute(select(User).where(User.email == email))
-    user = result.scalars().first()
+    user = result.scalar_one_or_none()
     blacklisted_result = await db.execute(select(Token_Blacklist).where(Token_Blacklist.token == token))
-    blacklisted = blacklisted_result.scalars().first()
+    blacklisted = blacklisted_result.scalar_one_or_none()
     if not user:
         raise InvalidUser()
     if blacklisted:
         raise BlacklistedToken()
     return user
 
-async def require_role(required_roles: List[str]):
+def require_role(required_roles: List[str]):
     async def role_checker(current_user: UserResponse = Depends(get_current_user)):
         if current_user.user_role not in required_roles:
             raise PermissionException()

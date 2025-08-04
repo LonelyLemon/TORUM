@@ -71,3 +71,10 @@ class PresignedURLFailed(HTTPException):
             status_code=500,
             detail="Generate presigned URL failed !"
         )
+
+class InvalidRole(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=400,
+            detail="Invalid Role !"
+        )

@@ -20,6 +20,12 @@ class User(Base):
     docs = relationship("Reading_Documents", back_populates="documents_owner")
     refresh = relationship("Refresh_Token", back_populates="curr_user")
 
+    @validates('user_role')
+    def validate_role(self, key, value):
+        valid_roles = {"user", "moderator", "admin"}
+        if value not in valid_roles:
+            raise ValueError(f"Invalid Role !")
+        return value
 ####    END USER TABLE      ####
 
 #---------------------------------------------------------------#
