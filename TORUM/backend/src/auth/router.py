@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 
 from fastapi import Depends, APIRouter, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
@@ -6,9 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from backend.src.database import get_db
-from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed, InvalidRole, PermissionException
+from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed, PermissionException, SizeTooLarge
 from backend.src.auth.models import User, Token_Blacklist, Post, Refresh_Token, Reading_Documents
-from backend.src.auth.schemas import UserCreate, UserUpdate, UserResponse, PostCreate, PostUpdate, Reading_Documents_Upload, Reading_Documents_Response
+from backend.src.auth.schemas import UserCreate, UserUpdate, UserResponse, PostCreate, PostUpdate, Reading_Documents_Response
 from backend.src.auth.services import get_password_hash, verify_password, create_access_token, create_refresh_token
 from backend.src.auth.dependencies import require_role, oauth2_scheme
 from backend.src.auth.utils import upload_file_to_s3, generate_presigned_url
@@ -126,8 +127,6 @@ async def update_user_role(user_id: str,
                            current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
     if current_user.user_role != "admin":
         raise PermissionException()
-    if new_role not in ["user", "moderator", "admin"]:
-        raise InvalidRole()
     result = await db.execute(select(User).where(User.user_id == user_id))
     user = result.scalar_one_or_none()
     if user is None:
@@ -219,21 +218,29 @@ reading_documents_route = APIRouter(
 )
 
 @reading_documents_route.post('/upload-reading-documents', response_model=Reading_Documents_Response)
-async def upload_reading_documents(docs: Reading_Documents_Upload,
+async def upload_reading_documents(docs_title: str, 
+                                   docs_description: str, 
+                                   docs_tags: str,
                                    file: UploadFile = File(...),
                                    db: AsyncSession = Depends(get_db), 
                                    current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
-    s3_key = f"{current_user.user_id}/{file.filename}"
-    upload_result = upload_file_to_s3(file.file, s3_key, file.content_type)
-
-    if upload_result is None:
-        raise FileUploadFailed()
+    MAX_FILE_SIZE = 20 * 1024 * 1024
+    if file.size > MAX_FILE_SIZE:
+        raise SizeTooLarge()
     
+    s3_key = f"{current_user.user_id}/{uuid.uuid4()}_{file.filename}"
+    try:
+        upload_result = await upload_file_to_s3(file.file, s3_key, file.content_type)
+        if upload_result is None:
+            raise FileUploadFailed()
+    finally:
+        await file.close()
+
     new_doc = Reading_Documents(
         docs_owner = current_user.user_id,
-        docs_title = docs.docs_title,
-        docs_description = docs.docs_description,
-        docs_tags = docs.docs_tags,
+        docs_title = docs_title,
+        docs_description = docs_description,
+        docs_tags = docs_tags,
         docs_file_path = s3_key,
     )
     db.add(new_doc)
@@ -247,10 +254,10 @@ async def download_document(doc_id: str,
     result = await db.execute(select(Reading_Documents).where(Reading_Documents.docs_id == doc_id))
     document = result.scalar_one_or_none()
 
-    if not document:
+    if document is None:
         raise DocumentNotFound()
     
-    presigned_url = generate_presigned_url(document.docs_file_path)
+    presigned_url = await generate_presigned_url(document.docs_file_path)
     if not presigned_url:
         raise PresignedURLFailed()
     

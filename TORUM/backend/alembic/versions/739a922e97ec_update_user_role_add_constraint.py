@@ -18,8 +18,10 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-def upgrade(): 
+def upgrade():
+    """Upgrade schema."""
     op.execute("ALTER TABLE users ADD CONSTRAINT valid_user_role CHECK (user_role IN ('user', 'moderator', 'admin'))")
 
 def downgrade():
+    """Downgrade schema."""
     op.execute("ALTER TABLE users DROP CONSTRAINT valid_user_role")

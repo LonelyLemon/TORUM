@@ -1,8 +1,8 @@
 from uuid import UUID
 from fastapi import Form
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, EmailStr
+from typing import Optional, Annotated
+from pydantic import BaseModel, EmailStr, StringConstraints
 
 
 
@@ -31,11 +31,6 @@ class PostCreate(BaseModel):
 class PostUpdate(BaseModel):
     post_title: Optional[str] = None
     post_content: Optional[str] = None
-
-class Reading_Documents_Upload(BaseModel):
-    docs_title: str = Form(...)
-    docs_description:str = Form(...)
-    docs_tags: str = Form(...)
 
 class Reading_Documents_Response(BaseModel):
     docs_id: UUID

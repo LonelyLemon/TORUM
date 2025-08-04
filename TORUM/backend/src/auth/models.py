@@ -1,4 +1,5 @@
 import uuid
+import os
 
 from sqlalchemy import Column, String, Integer, Boolean, Text, UUID, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship, validates
@@ -63,13 +64,13 @@ class Reading_Documents(Base):
 
     documents_owner = relationship("User", back_populates="docs")
 
-    # @validates('docs_file_path')
-    # def validate_file_extension(self, key, docs_file_path):
-    #     allowed_extension = {'.pdf', '.docx'}
-    #     ext = os.path.splitext(docs_file_path)[1].lower()
-    #     if ext not in allowed_extension:
-    #         raise ValueError("Only .pdf and .docx files are allowed")
-    #     return docs_file_path
+    @validates('docs_file_path')
+    def validate_file_extension(self, key, docs_file_path):
+        allowed_extension = {'.pdf', '.docx'}
+        ext = os.path.splitext(docs_file_path)[1].lower()
+        if ext not in allowed_extension:
+            raise ValueError("Only .pdf and .docx files are allowed !")
+        return docs_file_path
 
 ####     END READING DOCUMENTS TABLE      ####
 

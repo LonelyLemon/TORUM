@@ -72,9 +72,9 @@ class PresignedURLFailed(HTTPException):
             detail="Generate presigned URL failed !"
         )
 
-class InvalidRole(HTTPException):
+class SizeTooLarge(HTTPException):
     def __init__(self):
         super().__init__(
             status_code=400,
-            detail="Invalid Role !"
+            detail="File size exceeds 20MB limit !"
         )
