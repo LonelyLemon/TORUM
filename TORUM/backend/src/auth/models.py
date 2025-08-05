@@ -3,6 +3,7 @@ import os
 
 from sqlalchemy import Column, String, Integer, Boolean, Text, UUID, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship, validates
+from sqlalchemy.dialects.postgresql import TSVECTOR
 
 from backend.src.database import Base
 
@@ -42,6 +43,7 @@ class Post(Base):
     post_content = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    search_vector = Column(TSVECTOR)
 
     owner = relationship("User", back_populates="post")
 
@@ -61,6 +63,7 @@ class Reading_Documents(Base):
     docs_tags = Column(String, default="Documents")
     docs_file_path = Column(String, nullable=False)
     uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
+    search_vector = Column(TSVECTOR)
 
     documents_owner = relationship("User", back_populates="docs")
 

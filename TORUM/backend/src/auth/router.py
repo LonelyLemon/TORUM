@@ -1,13 +1,14 @@
 import asyncio
 import uuid
 
-from fastapi import Depends, APIRouter, UploadFile, File
+from fastapi import Depends, APIRouter, UploadFile, File, Query
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.sql import text, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from backend.src.database import get_db
-from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed, PermissionException, SizeTooLarge
+from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed, PermissionException, SizeTooLarge, EmptyQueryException
 from backend.src.auth.models import User, Token_Blacklist, Post, Refresh_Token, Reading_Documents
 from backend.src.auth.schemas import UserCreate, UserUpdate, UserResponse, PostCreate, PostUpdate, Reading_Documents_Response
 from backend.src.auth.services import get_password_hash, verify_password, create_access_token, create_refresh_token
@@ -280,16 +281,27 @@ search_route = APIRouter(
 )
 
 @search_route.get("/search")
-async def search(query: str,
+async def search(query: str = Query(..., min_length=1, max_length=100),
+                 offset: int = Query(0, ge=0),
+                 limit: int = Query(10, ge=1, le=100),
                  db: AsyncSession = Depends(get_db)):
-    post_query = select(Post).where(Post.post_title.ilike(f"%{query}%"))
-    document_query = select(Reading_Documents).where(Reading_Documents.docs_title.ilike(f"%{query}%"))
+    if not query.strip():
+        raise EmptyQueryException()
+    tsquery = func.plainto_tsquery('english', query)
+
+    post_query = select(Post, func.ts_rank(Post.search_vector, tsquery).label('rank')
+                        ).where(Post.search_vector.op('@@')(tsquery)
+                        ).order_by(text('rank DESC')).offset(offset).limit(limit)
+    
+    document_query = select(Reading_Documents, func.ts_rank(Reading_Documents.search_vector, tsquery).label('rank')
+                            ).where(Reading_Documents.search_vector.op('@@')(tsquery)
+                            ).order_by(text('rank DESC')).offset(offset).limit(limit)
     
     post_result, document_result = await asyncio.gather(
         db.execute(post_query),
         db.execute(document_query)
     )
-
+    
     return {
         "post_result": post_result.scalars().all(),
         "document_result": document_result.scalars().all()

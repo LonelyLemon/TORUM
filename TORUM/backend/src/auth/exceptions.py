@@ -78,3 +78,10 @@ class SizeTooLarge(HTTPException):
             status_code=400,
             detail="File size exceeds 20MB limit !"
         )
+
+class EmptyQueryException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=400,
+            detail="Search query can't be empty !"
+        )
