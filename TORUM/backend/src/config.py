@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     # JWT
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRATION_HOURS: int
+    JWT_EXPIRATION_MINUTES: int
     REFRESH_TOKEN_HOURS: int
 
     # AWS USER

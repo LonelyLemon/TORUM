@@ -6,12 +6,6 @@ from backend.src.auth import router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # try:
-    #     async with engine.connect() as conn:
-    #         await conn.run_sync(Base.metadata.create_all)
-    # except Exception as e:
-    #     print(f"Database setup failed: {e}")
-    #     raise
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -25,6 +19,7 @@ app.add_middleware(CORSMiddleware,
 app.include_router(router.register_route)
 app.include_router(router.login_route)
 app.include_router(router.logout_route)
+app.include_router(router.refresh_token_route)
 app.include_router(router.get_user_route)
 app.include_router(router.post_route)
 app.include_router(router.reading_documents_route)

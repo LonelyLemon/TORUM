@@ -53,11 +53,11 @@ export interface PostUpdate {
 
 /*---------------------------------------------------------------*/
 
-export interface ReadingDocumentUpload {
-    docs_title: string;
-    docs_description?: string;
-    docs_tags: string;
-}
+// export interface ReadingDocumentUpload {
+//     docs_title: string;
+//     docs_description: string;
+//     docs_tags: string;
+// }
 
 export interface ReadingDocumentResponse {
     docs_id: string;

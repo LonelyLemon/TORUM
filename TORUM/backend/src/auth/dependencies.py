@@ -6,9 +6,9 @@ from jose import JWTError
 from typing import List
 
 from backend.src.database import get_db
-from backend.src.auth.models import Token_Blacklist, User
-from backend.src.auth.exceptions import CredentialException, InvalidUser, BlacklistedToken, PermissionException
-from backend.src.auth.services import decode_access_token
+from backend.src.auth.models import User
+from backend.src.auth.exceptions import CredentialException, InvalidUser, PermissionException
+from backend.src.auth.services import decode_token
 from backend.src.auth.schemas import UserResponse
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
@@ -16,7 +16,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 async def get_current_user(token: str = Depends(oauth2_scheme), 
                            db: AsyncSession = Depends(get_db)):
     try:
-        payload = decode_access_token(token)
+        payload = decode_token(token)
         email: str = payload.get("sub")
         if not email:
             raise CredentialException()
@@ -24,12 +24,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
         raise CredentialException()
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
-    blacklisted_result = await db.execute(select(Token_Blacklist).where(Token_Blacklist.token == token))
-    blacklisted = blacklisted_result.scalar_one_or_none()
     if not user:
         raise InvalidUser()
-    if blacklisted:
-        raise BlacklistedToken()
     return user
 
 def require_role(required_roles: List[str]):

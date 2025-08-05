@@ -6,12 +6,13 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.sql import text, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from jose import JWTError
 
 from backend.src.database import get_db
-from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed, PermissionException, SizeTooLarge, EmptyQueryException
-from backend.src.auth.models import User, Token_Blacklist, Post, Refresh_Token, Reading_Documents
+from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed, PermissionException, SizeTooLarge, EmptyQueryException, CredentialException
+from backend.src.auth.models import User, Post, Refresh_Token, Reading_Documents
 from backend.src.auth.schemas import UserCreate, UserUpdate, UserResponse, PostCreate, PostUpdate, Reading_Documents_Response
-from backend.src.auth.services import get_password_hash, verify_password, create_access_token, create_refresh_token
+from backend.src.auth.services import get_password_hash, verify_password, create_access_token, create_refresh_token, decode_token
 from backend.src.auth.dependencies import require_role, oauth2_scheme
 from backend.src.auth.utils import upload_file_to_s3, generate_presigned_url
 
@@ -59,12 +60,6 @@ async def login(login_request: OAuth2PasswordRequestForm = Depends(),
         raise InvalidUser()
     access_token = create_access_token(data={"sub": user.email})
     refresh_token = create_refresh_token(data={"sub": user.email})
-    new_refresh_token = Refresh_Token(
-        refresh_token = refresh_token,
-        user_id = user.user_id
-    )
-    db.add(new_refresh_token)
-    await db.commit()
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -74,23 +69,36 @@ async def login(login_request: OAuth2PasswordRequestForm = Depends(),
 
 #---------------------------------------------------------------#
 
+####     REFRESH TOKEN ROUTE     #####
+refresh_token_route = APIRouter(
+    tags=["Refresh_Token"]
+)
+
+@refresh_token_route.post('/refresh')
+async def refresh_token(refresh_token: str):
+    try:
+        payload = decode_token(refresh_token)
+        email: str = payload.get("sub")
+        if not email:
+            raise CredentialException()
+    except JWTError:
+        raise CredentialException()
+    access_token = create_access_token(data={"sub": email})
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+####     END REFRESH TOKEN ROUTE     #####
+
+#---------------------------------------------------------------#
+
 ####     LOGOUT ROUTE     #####
 logout_route = APIRouter(
     tags=["Logout"]
 )
 
 @logout_route.post('/logout')
-async def logout(token: str = Depends(oauth2_scheme), 
-                 db: AsyncSession = Depends(get_db), 
-                 current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
-    blacklisted = Token_Blacklist(token = token)
-    db.add(blacklisted)
-    await db.commit()
-    result = await db.execute(select(Refresh_Token).where(Refresh_Token.user_id == current_user.user_id))
-    refresh_token = result.scalar_one_or_none()
-    if refresh_token:
-        refresh_token.is_expired = True
-        await db.commit()
+async def logout():
     return {"message": "Logout Successfully"}
 ####     END LOGOUT ROUTE     #####
 

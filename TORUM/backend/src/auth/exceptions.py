@@ -1,75 +1,14 @@
 from fastapi import HTTPException
 
+#---------------------------------------------------------------#
 
-class CredentialException(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=404,
-            detail="Could not validate credential",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-class PermissionException(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=403,
-            detail="Permission Denied !"
-        )
+####     HTTP CODE 400     #####
 
 class UserExistedCheck(HTTPException):
     def __init__(self):
         super().__init__(
             status_code=400,
             detail="Email already existed !"
-        )
-
-class InvalidPassword(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=401,
-            detail="Invalid Password !"
-        )
-
-class InvalidUser(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=404,
-            detail="Invalid User - User not found !"
-        )
-
-class BlacklistedToken(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=401,
-            detail="Token has been revoked !"
-        )
-
-class PostNotFound(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=404,
-            detail="Post not found !"
-        )
-
-class FileUploadFailed(HTTPException):
-    def __init__(self, detail="Upload File to AWS S3 Failed"):
-        super().__init__(
-            status_code=500,
-            detail=detail
-        )
-
-class DocumentNotFound(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=404,
-            detail="Document not found !"
-        )
-
-class PresignedURLFailed(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=500,
-            detail="Generate presigned URL failed !"
         )
 
 class SizeTooLarge(HTTPException):
@@ -85,3 +24,78 @@ class EmptyQueryException(HTTPException):
             status_code=400,
             detail="Search query can't be empty !"
         )
+
+#---------------------------------------------------------------#
+
+####     HTTP CODE 401     #####
+
+class InvalidPassword(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=401,
+            detail="Invalid Password !"
+        )
+
+#---------------------------------------------------------------#
+
+####     HTTP CODE 403     #####
+
+class PermissionException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=403,
+            detail="Permission Denied !"
+        )
+
+#---------------------------------------------------------------#
+
+####     HTTP CODE 404     #####
+
+class CredentialException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=404,
+            detail="Could not validate credential",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+class InvalidUser(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=404,
+            detail="Invalid User - User not found !"
+        )
+
+class PostNotFound(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=404,
+            detail="Post not found !"
+        )
+
+class DocumentNotFound(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=404,
+            detail="Document not found !"
+        )
+
+#---------------------------------------------------------------#
+
+####     HTTP CODE 500     #####
+
+class FileUploadFailed(HTTPException):
+    def __init__(self, detail="Upload File to AWS S3 Failed"):
+        super().__init__(
+            status_code=500,
+            detail=detail
+        )
+
+class PresignedURLFailed(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=500,
+            detail="Generate presigned URL failed !"
+        )
+
+#---------------------------------------------------------------#

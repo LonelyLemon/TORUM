@@ -3,7 +3,7 @@ import axios from "axios";
 import type { User, UserUpdate, 
               AuthResponse, LoginCredentials, SignupCredentials, 
               Post, PostCreate, PostUpdate, 
-              ReadingDocumentResponse, ReadingDocumentUpload, 
+              ReadingDocumentResponse, 
               Search
             } from "../types/index";
 
@@ -66,11 +66,11 @@ export const updateUser = async (update_data: UserUpdate): Promise<{ message: st
   return response.data;
 };
 
-export const uploadReadingDocument = async (data: ReadingDocumentUpload, file: File): Promise<ReadingDocumentResponse> => {
+export const uploadReadingDocument = async (docs_title: string, docs_description: string, docs_tags: string, file: File): Promise<ReadingDocumentResponse> => {
   const formData = new FormData();
-  formData.append("docs.docs_title", data.docs_title);
-  formData.append("docs.docs_description", data.docs_description ?? "");
-  formData.append("docs.docs_tags", data.docs_tags);
+  formData.append("docs_title", docs_title);
+  formData.append("docs_description", docs_description);
+  formData.append("docs_tags", docs_tags || "Documents");
   formData.append("file", file);
 
   const response = await api.post<ReadingDocumentResponse>('/upload-reading-documents', formData, {headers: {"Content-Type": "multipart/form-data"}});
@@ -81,6 +81,11 @@ export const getMyDocuments = async (): Promise<ReadingDocumentResponse[]> => {
   const response = await api.get('/my-reading-documents');
   return response.data;
 }
+
+export const downloadDocument = async (docId: string): Promise<{ url: string }> => {
+    const response = await api.get(`/download-document/${docId}`);
+    return response.data;
+};
 
 export const search = async (query: string): Promise<Search> => {
   const response = await api.get('/search', {params: {query}});

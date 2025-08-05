@@ -20,7 +20,6 @@ class User(Base):
 
     post = relationship("Post", back_populates="owner")
     docs = relationship("Reading_Documents", back_populates="documents_owner")
-    refresh = relationship("Refresh_Token", back_populates="curr_user")
 
     @validates('user_role')
     def validate_role(self, key, value):
@@ -76,29 +75,5 @@ class Reading_Documents(Base):
         return docs_file_path
 
 ####     END READING DOCUMENTS TABLE      ####
-
-#---------------------------------------------------------------#
-
-####     TOKEN TABLE     ####
-
-class Token_Blacklist(Base):
-    __tablename__ = "token_blacklist"
-
-    token_id = Column(Integer, primary_key=True)
-    token = Column(Text, nullable=False, unique=True)
-    is_blacklisted = Column(Boolean, default=True)
-
-class Refresh_Token(Base):
-    __tablename__ = "refresh_token"
-
-    refresh_token_id = Column(Integer, primary_key=True)
-    refresh_token = Column(Text, nullable=False, unique=True, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=False)
-    is_expired = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    curr_user = relationship("User", back_populates="refresh")
-
-####     END TOKEN TABLE      ####
 
 #---------------------------------------------------------------#

@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 
-import { useAuth } from "../context/AuthContext";
 import { getUser, updateUser } from "../services/api";
 import { type User } from "../types";
 
 const AccountManagement: React.FC = () => {
-    const { user } = useAuth();
     const [users, setUser] = useState<User | null>(null);
 
     const [error, setError] = useState("");
