@@ -32,6 +32,6 @@ def create_refresh_token(data: dict) -> str:
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
     return encoded_jwt
 
-def decode_token(token: str) -> str:
+def decode_token(token: str) -> dict:
     return jwt.decode(token, JWT_SECRET_KEY, algorithms=JWT_ALGORITHM)
 # End JWT Token

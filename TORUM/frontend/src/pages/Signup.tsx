@@ -7,12 +7,21 @@ const Signup: React.FC = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
+        if (password !== confirmPassword) {
+            setError('Password does not match !');
+            return; 
+        }
+        if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+            setError("Password must be at least 8 characters long, contain an uppercase letter and a number !");
+            return;
+        }
         try {
             await signup({ username, email, password })
             navigate('/login');
@@ -56,6 +65,16 @@ const Signup: React.FC = () => {
                         type="password"
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Enter your password"
+                        className="w-full p-2 border rounded"
+                    />
+                </div>
+                <div className="mb-4">
+                    <label className="block mb-1">Confirm Password</label>
+                    <input 
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm your password"
                         className="w-full p-2 border rounded"
                     />
                 </div>

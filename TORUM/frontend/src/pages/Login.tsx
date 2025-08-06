@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
-import { login } from "../services/api";
+import { login, getUser } from "../services/api";
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -16,8 +16,14 @@ const Login: React.FC = () => {
         setError('');
         try {
             const data = await login({ email, password });
-            authLogin(data.access_token, { user_id: '', email, username: '' });
-            navigate('/post');
+            const userData = await getUser();
+            authLogin(data.access_token, data.refresh_token, { 
+                user_id: userData.user_id, 
+                email: userData.email, 
+                username: userData.username,
+                user_role: userData.user_role, 
+            });
+            navigate('/');
         } catch (err) {
             setError('Invalid email or password !');
         }

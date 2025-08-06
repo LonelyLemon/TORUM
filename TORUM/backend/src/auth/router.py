@@ -10,10 +10,10 @@ from jose import JWTError
 
 from backend.src.database import get_db
 from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed, PermissionException, SizeTooLarge, EmptyQueryException, CredentialException
-from backend.src.auth.models import User, Post, Refresh_Token, Reading_Documents
+from backend.src.auth.models import User, Post, Reading_Documents
 from backend.src.auth.schemas import UserCreate, UserUpdate, UserResponse, PostCreate, PostUpdate, Reading_Documents_Response
 from backend.src.auth.services import get_password_hash, verify_password, create_access_token, create_refresh_token, decode_token
-from backend.src.auth.dependencies import require_role, oauth2_scheme
+from backend.src.auth.dependencies import require_role
 from backend.src.auth.utils import upload_file_to_s3, generate_presigned_url
 
 #---------------------------------------------------------------#
@@ -54,10 +54,10 @@ async def login(login_request: OAuth2PasswordRequestForm = Depends(),
                 db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == login_request.username))
     user = result.scalar_one_or_none()
-    if not verify_password(login_request.password, user.hashed_password):
-        raise InvalidPassword()
     if not user:
         raise InvalidUser()
+    if not verify_password(login_request.password, user.hashed_password):
+        raise InvalidPassword()
     access_token = create_access_token(data={"sub": user.email})
     refresh_token = create_refresh_token(data={"sub": user.email})
     return {
@@ -200,7 +200,7 @@ async def update_post(id: str,
 async def delete_post(id: str, 
                       db: AsyncSession = Depends(get_db), 
                       current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
-    if current_user.user_role == ["moderator", "admin"]:
+    if current_user.user_role in ["moderator", "admin"]:
         result = await db.execute(select(Post).where(Post.post_id == id))
     else:
         result = await db.execute(select(Post).where(Post.post_id == id, Post.post_owner == current_user.user_id))

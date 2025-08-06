@@ -3,6 +3,7 @@ export interface User {
     username: string;
     email: string;
     password?: string;
+    user_role: string;
 };
 
 export interface UserUpdate {

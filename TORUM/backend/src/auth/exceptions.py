@@ -36,6 +36,14 @@ class InvalidPassword(HTTPException):
             detail="Invalid Password !"
         )
 
+class CredentialException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=401,
+            detail="Could not validate credential",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
 #---------------------------------------------------------------#
 
 ####     HTTP CODE 403     #####
@@ -50,14 +58,6 @@ class PermissionException(HTTPException):
 #---------------------------------------------------------------#
 
 ####     HTTP CODE 404     #####
-
-class CredentialException(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=404,
-            detail="Could not validate credential",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
 
 class InvalidUser(HTTPException):
     def __init__(self):

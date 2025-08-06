@@ -18,7 +18,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
     try:
         payload = decode_token(token)
         email: str = payload.get("sub")
-        if not email:
+        token_type: str = payload.get("type")
+        if not email or token_type != "access":
             raise CredentialException()
     except JWTError:
         raise CredentialException()
