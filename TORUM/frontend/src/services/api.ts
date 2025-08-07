@@ -14,20 +14,22 @@ const api = axios.create ({
 api.interceptors.request.use(async (config) => {
     let token = localStorage.getItem('access_token');
     if (token) {
+        console.log('Token:', token);
+        console.log('Authorization Header:', `Bearer ${token}`);
+        config.headers["Authorization"] = `Bearer ${token}`;
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
           const expiry = payload.exp * 1000;
           if (Date.now() >= expiry) {
             const refreshToken = localStorage.getItem('refresh_token');
             if (refreshToken) {
-              const response = await axios.post('http://127.0.0.1:8000/refresh', {refreshToken: refreshToken});
+              const response = await axios.post('http://127.0.0.1:8000/refresh', { refresh_token: refreshToken }, { headers: { 'Content-Type': 'application/json' } });
               token = response.data.access_token;
               localStorage.setItem('access_token', response.data.access_token);
             } else {
               throw new Error('No refresh token available');
             }
           }
-          config.headers.Authorization = `Bearer ${token}`;
         } catch (error) {
           console.error('Token refresh error:', error);
           localStorage.removeItem('access_token');

@@ -16,6 +16,12 @@ const Login: React.FC = () => {
         setError('');
         try {
             const data = await login({ email, password });
+            authLogin(data.access_token, data.refresh_token, { 
+                user_id: '', 
+                email, 
+                username: '',
+                user_role: 'user', 
+            });
             const userData = await getUser();
             authLogin(data.access_token, data.refresh_token, { 
                 user_id: userData.user_id, 

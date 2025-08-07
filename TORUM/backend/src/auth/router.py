@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 
-from fastapi import Depends, APIRouter, UploadFile, File, Query, Header
+from fastapi import Depends, APIRouter, UploadFile, File, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.sql import text, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -75,12 +75,7 @@ refresh_token_route = APIRouter(
 )
 
 @refresh_token_route.post('/refresh')
-async def refresh_token(authorization: str = Header(...)):
-    if not authorization.startswith("Bearer "):
-        raise InvalidAuthorization()
-    
-    refresh_token = authorization.replace("Bearer ", "").strip()
-    
+async def refresh_token(refresh_token: str):
     try:
         payload = decode_token(refresh_token)
         email: str = payload.get("sub")
