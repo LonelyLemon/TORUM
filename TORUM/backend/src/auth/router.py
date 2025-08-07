@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 
-from fastapi import Depends, APIRouter, UploadFile, File, Query
+from fastapi import Depends, APIRouter, UploadFile, File, Query, Header
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.sql import text, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +9,7 @@ from sqlalchemy.future import select
 from jose import JWTError
 
 from backend.src.database import get_db
-from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed, PermissionException, SizeTooLarge, EmptyQueryException, CredentialException
+from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed, PermissionException, SizeTooLarge, EmptyQueryException, CredentialException, InvalidAuthorization
 from backend.src.auth.models import User, Post, Reading_Documents
 from backend.src.auth.schemas import UserCreate, UserUpdate, UserResponse, PostCreate, PostUpdate, Reading_Documents_Response
 from backend.src.auth.services import get_password_hash, verify_password, create_access_token, create_refresh_token, decode_token
@@ -75,14 +75,21 @@ refresh_token_route = APIRouter(
 )
 
 @refresh_token_route.post('/refresh')
-async def refresh_token(refresh_token: str):
+async def refresh_token(authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise InvalidAuthorization()
+    
+    refresh_token = authorization.replace("Bearer ", "").strip()
+    
     try:
         payload = decode_token(refresh_token)
         email: str = payload.get("sub")
-        if not email:
+        token_type: str = payload.get("type")
+        if not email or token_type != "refresh":
             raise CredentialException()
     except JWTError:
         raise CredentialException()
+    
     access_token = create_access_token(data={"sub": email})
     return {
         "access_token": access_token,

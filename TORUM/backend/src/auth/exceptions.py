@@ -36,6 +36,13 @@ class InvalidPassword(HTTPException):
             detail="Invalid Password !"
         )
 
+class InvalidAuthorization(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=401,
+            detail="Invalid Authorization Header"
+        )
+
 class CredentialException(HTTPException):
     def __init__(self):
         super().__init__(
