@@ -1,33 +1,42 @@
 import React, { useEffect, useState } from "react";
 
-import { getUser, updateUser } from "../services/api";
+import { getUser, getAllUsers, updateUser, updateUserRole } from "../services/api";
 import { type User } from "../types";
+import { useAuth } from "../context/AuthContext";
 
 const AccountManagement: React.FC = () => {
-    const [users, setUser] = useState<User | null>(null);
+    const { user } = useAuth();
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [allUsers, setAllUsers] = useState<User[]>([]);
 
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
     const [editingUsername, setEditingUsername] = useState(false);
     const [editingPassword, setEditingPassword] = useState(false);
-
     const [editUsername, setEditUsername] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
+    const [selectedUserID, setSelectedUserID] = useState("");
+    const [newRole, setNewRole] = useState("")
 
     useEffect(() => {
-        const fetchUser = async () => {
+        const fetchUserData = async () => {
             try {
                 const userData = await getUser();
-                setUser(userData);
+                setCurrentUser(userData);
                 setEditUsername(userData.username);
+                
+                if (user?.user_role === "admin") {
+                    const users = await getAllUsers();
+                    setAllUsers(users);
+                }
             } catch (err: any) {
-                setError(err.response?.data?.detail || "Failed to fetch user data.");
+                setError(err.response?.data?.detail || "Failed to fetch user data!");
             }
         };
-        fetchUser();
-    }, []);
+        fetchUserData();
+    }, [user]);
 
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -41,7 +50,7 @@ const AccountManagement: React.FC = () => {
 
         try {
             const payload: {username?: string, password?: string} = {};
-            if (editingUsername && editUsername !== users?.username) {
+            if (editingUsername && editUsername !== currentUser?.username) {
                 payload.username = editUsername;
             }
             if (editingPassword && newPassword) {
@@ -55,8 +64,7 @@ const AccountManagement: React.FC = () => {
 
             await updateUser(payload);
             setSuccess("Account Updated Successfully !");
-            setUser((prev) => prev ? { ...prev, ...payload} : prev);
-            
+            setCurrentUser((prev) => prev ? { ...prev, ...payload} : prev);
             setEditingUsername(false);
             setEditingPassword(false);
             setNewPassword("");
@@ -65,6 +73,29 @@ const AccountManagement: React.FC = () => {
             setError(err.response?.data?.detail || "Failed to update account !")
         }
     };
+
+    const handleRoleUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+        setSuccess("");
+        if (!selectedUserID || !newRole) {
+            setError("Please select a user and a role!");
+            return;
+        }
+
+        try {
+            await updateUserRole(selectedUserID, newRole);
+            setSuccess("User role updated successfully!");
+            setAllUsers((prev) => 
+                prev.map((u) => 
+                    u.user_id === selectedUserID ? { ...u, user_role: newRole } : u
+                ));
+            setSelectedUserID("");
+            setNewRole("");
+        } catch (err: any) {
+            setError(err.response?.data?.detail || "Failed to update user role!");
+        }
+    }
 
     return (
         <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow">
@@ -76,7 +107,7 @@ const AccountManagement: React.FC = () => {
                     <label className="block mb-1">User ID</label>
                     <input
                         type="text"
-                        value={users?.user_id || ""}
+                        value={currentUser?.user_id || ""}
                         disabled
                         className="w-full p-2 border rounded bg-gray-100"
                     />
@@ -85,7 +116,7 @@ const AccountManagement: React.FC = () => {
                     <label className="block mb-1">Email</label>
                     <input
                         type="email"
-                        value={users?.email || ""}
+                        value={currentUser?.email || ""}
                         disabled
                         className="w-full p-2 border rounded bg-gray-100"
                     />
@@ -108,6 +139,15 @@ const AccountManagement: React.FC = () => {
                             {editingUsername ? "Cancel" : "Edit"}
                         </button>
                     </div>
+                </div>
+                <div className="mb-4">
+                    <label className="block mb-1">Role</label>
+                    <input 
+                        type="text"
+                        value={currentUser?.user_role || ""}
+                        disabled
+                        className="w-full p-2 border rounded"
+                    />
                 </div>
                 <div className="mb-4">
                     <label className="block mb-1">Password</label>
@@ -164,6 +204,46 @@ const AccountManagement: React.FC = () => {
                     Save Changes
                 </button>
             </form>
+
+            {user?.user_role === "admin" && (
+                <div className="mt-8">
+                    <h3 className="text-xl font-semibold mb-4">Admin: Update User Role</h3>
+                    <form onSubmit={handleRoleUpdate}>
+                        <div className="mb-4">
+                            <label className="block mb-1">Select User</label>
+                            <select
+                                value={selectedUserID}
+                                onChange={(e) => setSelectedUserID(e.target.value)}
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value=""></option>
+                                {allUsers.filter((u) => u.user_id !== currentUser?.user_id).map((u) => (
+                                    <option key={u.user_id} value={u.user_id}>{u.username} ({u.email})</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="mb-4">
+                            <label className="block mb-1">New Role</label>
+                            <select
+                                value={newRole}
+                                onChange={(e) => setNewRole(e.target.value)}
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value=""></option>
+                                <option value="user">User</option>
+                                <option value="moderator">Moderator</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
+                        >
+                            Update Role
+                        </button>
+                    </form>
+                </div>
+            )}
         </div>
     );
 };

@@ -2,10 +2,12 @@ import asyncio
 import uuid
 
 from fastapi import Depends, APIRouter, UploadFile, File, Query
+from fastapi.params import Form
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.sql import text, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from typing import List
 from jose import JWTError
 
 from backend.src.database import get_db
@@ -115,6 +117,15 @@ get_user_route = APIRouter(
 async def get_user(current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
     return current_user
 
+@get_user_route.get('/users', response_model=List[UserResponse])
+async def get_all_users(db: AsyncSession = Depends(get_db), 
+                        current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
+    if current_user.user_role != "admin":
+        raise PermissionException()
+    result = await db.execute(select(User))
+    users = result.scalars().all()
+    return users
+
 @get_user_route.put('/update-user')
 async def update_user(update_request: UserUpdate,
                       db: AsyncSession = Depends(get_db),
@@ -192,8 +203,9 @@ async def update_post(id: str,
     update_data = update_request.model_dump(exclude_unset=True)
     if post is None:
         raise PostNotFound()
-    for key, value in update_data.dict().items():
-        setattr(post, key, value)
+    for key, value in update_data.items():
+        if hasattr(post, key):
+            setattr(post, key, value)
     await db.commit()
     await db.refresh(post)
     return post
@@ -229,9 +241,9 @@ reading_documents_route = APIRouter(
 )
 
 @reading_documents_route.post('/upload-reading-documents', response_model=Reading_Documents_Response)
-async def upload_reading_documents(docs_title: str, 
-                                   docs_description: str, 
-                                   docs_tags: str,
+async def upload_reading_documents(docs_title: str = Form(...), 
+                                   docs_description: str = Form(...), 
+                                   docs_tags: str = Form(...),
                                    file: UploadFile = File(...),
                                    db: AsyncSession = Depends(get_db), 
                                    current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):

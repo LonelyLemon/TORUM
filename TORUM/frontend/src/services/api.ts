@@ -53,34 +53,39 @@ export const login = async (credentials: LoginCredentials) => {
     return response.data;
 };
 
-export const signup = async (credentials: SignupCredentials) => {
-    const response = await api.post<User>('/register', credentials);
+export const signup = async (credentials: SignupCredentials): Promise<User> => {
+    const response = await api.post('/register', credentials);
     return response.data;
 };
 
-export const createPost = async (post: PostCreate) => {
-  const response = await api.post<Post>('/create-post', post);
+export const createPost = async (post: PostCreate): Promise<Post> => {
+  const response = await api.post('/create-post', post);
   return response.data;
 };
 
-export const getMyPosts = async() => {
-  const response = await api.get<Post[]>('/my-posts');
+export const getMyPosts = async(): Promise<Post[]> => {
+  const response = await api.get('/my-posts');
   return response.data;
 }
 
-export const updatePost = async (id: string, post: PostUpdate) => {
-  const response = await api.put<{ message: string | undefined}>(`/update-post/${id}`, post);
+export const updatePost = async (id: string, post: PostUpdate): Promise<{ message: string | undefined}> => {
+  const response = await api.put(`/update-post/${id}`, post);
   return response.data;
 };
 
-export const deletePost = async (id: string) => {
-  const response = await api.delete<{ message: string }>(`/delete-post/${id}`);
+export const deletePost = async (id: string): Promise<{ message: string }> => {
+  const response = await api.delete(`/delete-post/${id}`);
   return response.data;
 };
 
-export const getUser = async () => {
-  const response = await api.get<User>('/me');
+export const getUser = async (): Promise<User> => {
+  const response = await api.get('/me');
   return response.data;
+};
+
+export const getAllUsers = async (): Promise<User[]> => {
+    const response = await api.get('/users');
+    return response.data;
 };
 
 export const updateUser = async (update_data: UserUpdate): Promise<{ message: string | undefined}> => {
@@ -88,14 +93,19 @@ export const updateUser = async (update_data: UserUpdate): Promise<{ message: st
   return response.data;
 };
 
-export const uploadReadingDocument = async (docs_title: string, docs_description: string, docs_tags: string, file: File): Promise<ReadingDocumentResponse> => {
+export const updateUserRole = async (user_id: string, new_role: string): Promise<{ message: string | undefined }> => {
+  const response = await api.put(`/update-user-role/${user_id}?new_role=${new_role}`);
+  return response.data;
+}
+
+export const uploadReadingDocument = async (title: string, description: string, tags: string, file: File): Promise<ReadingDocumentResponse> => {
   const formData = new FormData();
-  formData.append("docs_title", docs_title);
-  formData.append("docs_description", docs_description);
-  formData.append("docs_tags", docs_tags || "Documents");
+  formData.append("docs_title", title);
+  formData.append("docs_description", description);
+  formData.append("docs_tags", tags);
   formData.append("file", file);
 
-  const response = await api.post<ReadingDocumentResponse>('/upload-reading-documents', formData, {headers: {"Content-Type": "multipart/form-data"}});
+  const response = await api.post('/upload-reading-documents', formData);
   return response.data;
 }
 
