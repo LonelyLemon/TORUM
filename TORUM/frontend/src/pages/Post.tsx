@@ -24,7 +24,6 @@ const Posts: React.FC = () => {
             setPostID(newPost.post_id);
             setTitle('');
             setContent('');
-            alert('Post created!'); 
         } catch (err: any) {
             setError(err.response?.data?.detail || 'Failed to create post');
         }

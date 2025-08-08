@@ -11,12 +11,12 @@ from typing import List
 from jose import JWTError
 
 from backend.src.database import get_db
-from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, DocumentNotFound, PresignedURLFailed, PermissionException, SizeTooLarge, EmptyQueryException, CredentialException, InvalidAuthorization
+from backend.src.auth.exceptions import UserExistedCheck, InvalidPassword, InvalidUser, PostNotFound, FileUploadFailed, FileDeletionFailed, DocumentNotFound, PresignedURLFailed, PermissionException, SizeTooLarge, EmptyQueryException, CredentialException
 from backend.src.auth.models import User, Post, Reading_Documents
 from backend.src.auth.schemas import UserCreate, UserUpdate, UserResponse, PostCreate, PostUpdate, Reading_Documents_Response
 from backend.src.auth.services import get_password_hash, verify_password, create_access_token, create_refresh_token, decode_token
 from backend.src.auth.dependencies import require_role
-from backend.src.auth.utils import upload_file_to_s3, generate_presigned_url
+from backend.src.auth.utils import upload_file_to_s3, delete_file_from_s3, generate_presigned_url
 
 #---------------------------------------------------------------#
 
@@ -219,7 +219,7 @@ async def delete_post(id: str,
     else:
         result = await db.execute(select(Post).where(Post.post_id == id, Post.post_owner == current_user.user_id))
     post = result.scalar_one_or_none()
-    if not post:
+    if post is None:
         raise PostNotFound()
     await db.delete(post)
     await db.commit()
@@ -281,7 +281,7 @@ async def download_document(doc_id: str,
         raise DocumentNotFound()
     
     presigned_url = await generate_presigned_url(document.docs_file_path)
-    if not presigned_url:
+    if presigned_url is None:
         raise PresignedURLFailed()
     
     return {"url": presigned_url}
@@ -292,6 +292,28 @@ async def get_my_documents(db: AsyncSession = Depends(get_db),
     result = await db.execute(select(Reading_Documents).where(Reading_Documents.docs_owner == current_user.user_id))
     docs = result.scalars().all()
     return docs
+
+@reading_documents_route.delete('/delete-reading-document/{doc_id}')
+async def delete_document(doc_id: str, 
+                          db: AsyncSession = Depends(get_db), 
+                          current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
+    if current_user.user_role in ["moderator", "admin"]:
+        result = await db.execute(select(Reading_Documents).where(Reading_Documents.docs_id == doc_id))
+    else:
+        result = await db.execute(select(Reading_Documents).where(Reading_Documents.docs_id == doc_id, Reading_Documents.docs_owner == current_user.user_id))
+    document = result.scalar_one_or_none()
+
+    if document is None:
+        raise DocumentNotFound()
+    
+    deleted = await delete_file_from_s3(document.docs_file_path)
+    if not deleted:
+        raise FileDeletionFailed()
+    
+    await db.delete(document)
+    await db.commit()
+
+    return {"message": "Document deleted successfully !"}
 ####     READING DOCUMENTS ROUTE     ####
 
 #---------------------------------------------------------------#
@@ -309,7 +331,7 @@ async def search(query: str = Query(..., min_length=1, max_length=100),
                  db: AsyncSession = Depends(get_db)):
     if not query.strip():
         raise EmptyQueryException()
-    tsquery = func.plainto_tsquery('english', query)
+    tsquery = func.plainto_tsquery('english', f"{query}:*")
 
     post_query = select(Post, func.ts_rank(Post.search_vector, tsquery).label('rank')
                         ).where(Post.search_vector.op('@@')(tsquery)

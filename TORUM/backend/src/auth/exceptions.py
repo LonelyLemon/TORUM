@@ -36,12 +36,12 @@ class InvalidPassword(HTTPException):
             detail="Invalid Password !"
         )
 
-class InvalidAuthorization(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=401,
-            detail="Invalid Authorization Header"
-        )
+# class InvalidAuthorization(HTTPException):
+#     def __init__(self):
+#         super().__init__(
+#             status_code=401,
+#             detail="Invalid Authorization Header"
+#         )
 
 class CredentialException(HTTPException):
     def __init__(self):
@@ -93,6 +93,13 @@ class DocumentNotFound(HTTPException):
 
 class FileUploadFailed(HTTPException):
     def __init__(self, detail="Upload File to AWS S3 Failed"):
+        super().__init__(
+            status_code=500,
+            detail=detail
+        )
+
+class FileDeletionFailed(HTTPException):
+    def __init__(self, detail="Delete File from AWS S3 Failed"):
         super().__init__(
             status_code=500,
             detail=detail

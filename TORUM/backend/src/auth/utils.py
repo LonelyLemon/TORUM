@@ -25,6 +25,21 @@ async def upload_file_to_s3(file_obj, s3_key: str, content_type: str) -> Optiona
             print("Upload error: ", {e})
             return None
 
+async def delete_file_from_s3(s3_key: str) -> bool:
+    session = get_session()
+    async with session.create_client(
+        's3',
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+    ) as client:
+        try:
+            await client.delete_object(Bucket=S3_BUCKET, Key=s3_key)
+            return True
+        except ClientError as e:
+            print("Delete failed: ", {e})
+            return False
+
 async def generate_presigned_url(filename: str, expires_in: int = 3600) -> Optional[str]:
     session = get_session()
     async with session.create_client(

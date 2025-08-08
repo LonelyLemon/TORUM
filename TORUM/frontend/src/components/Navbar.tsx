@@ -21,6 +21,9 @@ const Navbar: React.FC = () => {
                 <div className="space-x-4">
                     { user ? (
                         <>
+                            <Link to="/search" className="bg-zinc-500 text-white px-4 py-2 rounded hover:text-gray-200">
+                                Search
+                            </Link>
                             <Link to="/upload-document" className="bg-lime-500 text-white px-4 py-2 rounded hover:text-gray-200">
                                 Upload Documents
                             </Link>

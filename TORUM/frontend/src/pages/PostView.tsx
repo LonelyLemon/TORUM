@@ -31,7 +31,6 @@ const PostView: React.FC = () => {
                 )
             );
             setIsEditing(null);
-            alert("Post updated!");
         } catch (err: any) {
             setError(err.response?.data?.detail || "Failed to update post");
         }
@@ -41,7 +40,6 @@ const PostView: React.FC = () => {
         try {
             await deletePost(postId);
             setPosts((prevPosts) => prevPosts.filter((post) => post.post_id !== postId));
-            alert("Post deleted!");
         } catch (err: any) {
             setError(err.response?.data?.detail || "Failed to delete post");
         }
