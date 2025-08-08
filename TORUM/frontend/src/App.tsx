@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Posts from './pages/Post';
+import PostDetail from './pages/PostDetail';
 import ViewPost from './pages/PostView';
 import AccountManagement from './pages/AccountManagement';
 import UploadDocument from './pages/UploadDocument';
@@ -29,6 +30,7 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route path="/view-post/:id" element={<PostDetail />} />
         <Route 
           path="/view-post"
           element={

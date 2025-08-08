@@ -7,7 +7,7 @@ import type { User, UserUpdate,
               Search
             } from "../types/index";
 
-const api = axios.create ({
+export const api = axios.create ({
     baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000",
 });
 
@@ -125,6 +125,6 @@ export const deleteDocument = async (docId: string): Promise<{ message: string }
 }
 
 export const search = async (query: string): Promise<Search> => {
-  const response = await api.get('/search', {params: {query}});
+  const response = await api.get('/search', {params: {query: query.trim()}});
   return response.data;
 }

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { search } from "../services/api";
+import { Link } from "react-router-dom";
+
+import { search, downloadDocument } from "../services/api";
 import type { Search, Post, ReadingDocumentResponse } from "../types";
 
 const Search: React.FC = () => {
@@ -7,6 +9,15 @@ const Search: React.FC = () => {
     const [results, setResults] = useState<Search | null>(null);
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+
+    const openDocument = async (id: string) => {
+        try {
+            const { url } = await downloadDocument(id);
+            window.open(url, "_blank", "noopener,noreferrer");
+        } catch (err) {
+            console.error("Failed to open document", err);
+        }
+    };
 
     const handleSearch = async () => {
         if (!query.trim()) {
@@ -53,9 +64,11 @@ const Search: React.FC = () => {
                         <p className="text-gray-500">No posts found.</p>
                     ) : (
                         results.post_result.map((post: Post) => (
-                            <div key={post.post_id} className="mb-2 p-2 border rounded">
-                                {post.post_title}
-                            </div>
+                            <Link key={post.post_id} to={`/view-post/${post.post_id}`}>
+                                <div className="mb-2 p-2 border rounded">
+                                    {post.post_title}
+                                </div>
+                            </Link>
                         ))
                     )}
                     <h3 className="text-lg font-semibold mb-2 mt-4">Documents</h3>
@@ -63,7 +76,11 @@ const Search: React.FC = () => {
                         <p className="text-gray-500">No documents found.</p>
                     ) : (
                         results.document_result.map((doc: ReadingDocumentResponse) => (
-                            <div key={doc.docs_id} className="mb-2 p-2 border rounded">
+                            <div
+                                key={doc.docs_id}
+                                onClick={() => openDocument(doc.docs_id)}
+                                className="mb-2 p-2 border rounded cursor-pointer text-blue-600 hover:underline"
+                            >
                                 {doc.docs_title}
                             </div>
                         ))

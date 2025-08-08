@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+import re
 
 from fastapi import Depends, APIRouter, UploadFile, File, Query
 from fastapi.params import Form
@@ -331,7 +332,11 @@ async def search(query: str = Query(..., min_length=1, max_length=100),
                  db: AsyncSession = Depends(get_db)):
     if not query.strip():
         raise EmptyQueryException()
-    tsquery = func.plainto_tsquery('english', f"{query}:*")
+    terms = re.findall(r"\w+", query)
+    if not terms:
+        raise EmptyQueryException()
+    tsquery_string = " & ".join(f"{term}:*" for term in terms)
+    tsquery = func.to_tsquery('english', tsquery_string)
 
     post_query = select(Post, func.ts_rank(Post.search_vector, tsquery).label('rank')
                         ).where(Post.search_vector.op('@@')(tsquery)
