@@ -10,5 +10,6 @@ export default defineConfig({
     allowedHosts: [
       'ec2-3-106-239-219.ap-southeast-2.compute.amazonaws.com'
     ]
-  }
+  },
+  envPrefix: 'VITE_',
 })

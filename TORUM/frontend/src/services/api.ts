@@ -8,7 +8,7 @@ import type { User, UserUpdate,
             } from "../types/index";
 
 const api = axios.create ({
-    baseURL: "http://127.0.0.1:8000",
+    baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000",
 });
 
 api.interceptors.request.use(async (config) => {
@@ -23,7 +23,7 @@ api.interceptors.request.use(async (config) => {
           if (Date.now() >= expiry) {
             const refreshToken = localStorage.getItem('refresh_token');
             if (refreshToken) {
-              const response = await axios.post('http://127.0.0.1:8000/refresh', { refresh_token: refreshToken }, { headers: { 'Content-Type': 'application/json' } });
+              const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/refresh`, { refresh_token: refreshToken }, { headers: { 'Content-Type': 'application/json' } });
               token = response.data.access_token;
               localStorage.setItem('access_token', response.data.access_token);
             } else {
@@ -115,9 +115,14 @@ export const getMyDocuments = async (): Promise<ReadingDocumentResponse[]> => {
 }
 
 export const downloadDocument = async (docId: string): Promise<{ url: string }> => {
-    const response = await api.get(`/download-document/${docId}`);
-    return response.data;
+  const response = await api.get(`/download-document/${docId}`);
+  return response.data;
 };
+
+export const deleteDocument = async (docId: string): Promise<{ message: string }> => {
+  const response = await api.delete(`/delete-reading-document/${docId}`);
+  return response.data; 
+}
 
 export const search = async (query: string): Promise<Search> => {
   const response = await api.get('/search', {params: {query}});
