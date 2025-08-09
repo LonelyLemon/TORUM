@@ -37,9 +37,6 @@ services:
       - "5173:5173"
     volumes:
       - ./frontend:/app/frontend
-    env_file:
-      - ./frontend/.env.production
-      - ./frontend/.env.development
     stdin_open: true
     tty: true
 
