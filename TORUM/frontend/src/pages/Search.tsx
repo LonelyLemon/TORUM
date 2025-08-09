@@ -64,11 +64,23 @@ const Search: React.FC = () => {
                         <p className="text-gray-500">No posts found.</p>
                     ) : (
                         results.post_result.map((post: Post) => (
-                            <Link key={post.post_id} to={`/view-post/${post.post_id}`}>
-                                <div className="mb-2 p-2 border rounded">
+                            <div
+                                key={post.post_id}
+                                className="mb-2 p-2 border rounded hover:bg-gray-50"
+                            >
+                                <Link
+                                    to={`/view-post/${post.post_id}`}
+                                    className="text-blue-600 hover:underline"
+                                >
                                     {post.post_title}
-                                </div>
-                            </Link>
+                                </Link>
+                                <p className="text-sm text-gray-600">
+                                    Created: {new Date(post.created_at).toLocaleString()}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                    Updated: {post.updated_at ? new Date(post.updated_at).toLocaleString() : "Have not been edited"}
+                                </p>
+                            </div>
                         ))
                     )}
                     <h3 className="text-lg font-semibold mb-2 mt-4">Documents</h3>

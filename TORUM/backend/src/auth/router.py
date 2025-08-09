@@ -5,6 +5,7 @@ import re
 from fastapi import Depends, APIRouter, UploadFile, File, Query
 from fastapi.params import Form
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.sql import text, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -185,25 +186,30 @@ async def create_post(post: PostCreate,
 @post_route.get('/view-post/{id}')
 async def view_post(id: str, 
                     db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Post).where(Post.post_id == id))
-    viewing_post = result.scalar_one_or_none()
-    if viewing_post is None:
+    result = await db.execute(select(Post, User.user_role).join(User, Post.post_owner == User.user_id).where(Post.post_id == id))
+    row = result.first()
+    if row is None:
         raise PostNotFound()
-    return viewing_post
+    post, owner_role = row
+    post_data = jsonable_encoder(post)
+    post_data["owner_role"] = owner_role
+    return post_data
 
 @post_route.put('/update-post/{id}')
 async def update_post(id: str, 
                       update_request: PostUpdate, 
                       db: AsyncSession = Depends(get_db), 
                       current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
-    if current_user.user_role == "admin":
-        result = await db.execute(select(Post).where(Post.post_id == id))
-    else:
-        result = await db.execute(select(Post).where(Post.post_id == id, Post.post_owner == current_user.user_id))
-    post = result.scalar_one_or_none()
-    update_data = update_request.model_dump(exclude_unset=True)
-    if post is None:
+    result = await db.execute(select(Post, User.user_role).join(User, Post.post_owner == User.user_id).where(Post.post_id == id))
+    row = result.first()
+    if row is None:
         raise PostNotFound()
+    post, owner_role = row
+    if current_user.user_role == "user" and post.post_owner != current_user.user_id:
+        raise PermissionException()
+    if current_user.user_role == "moderator" and post.post_owner != current_user.user_id and owner_role != "user":
+        raise PermissionException()
+    update_data = update_request.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         if hasattr(post, key):
             setattr(post, key, value)
@@ -215,13 +221,17 @@ async def update_post(id: str,
 async def delete_post(id: str, 
                       db: AsyncSession = Depends(get_db), 
                       current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
-    if current_user.user_role in ["moderator", "admin"]:
-        result = await db.execute(select(Post).where(Post.post_id == id))
-    else:
-        result = await db.execute(select(Post).where(Post.post_id == id, Post.post_owner == current_user.user_id))
-    post = result.scalar_one_or_none()
-    if post is None:
+    result = await db.execute(
+        select(Post, User.user_role).join(User, Post.post_owner == User.user_id).where(Post.post_id == id)
+    )
+    row = result.first()
+    if row is None:
         raise PostNotFound()
+    post, owner_role = row
+    if current_user.user_role == "user" and post.post_owner != current_user.user_id:
+        raise PermissionException()
+    if current_user.user_role == "moderator" and post.post_owner != current_user.user_id and owner_role != "user":
+        raise PermissionException()
     await db.delete(post)
     await db.commit()
     return {"message": "Post deleted successfully !"}
@@ -298,19 +308,20 @@ async def get_my_documents(db: AsyncSession = Depends(get_db),
 async def delete_document(doc_id: str, 
                           db: AsyncSession = Depends(get_db), 
                           current_user: UserResponse = Depends(require_role(["user", "moderator", "admin"]))):
-    if current_user.user_role in ["moderator", "admin"]:
-        result = await db.execute(select(Reading_Documents).where(Reading_Documents.docs_id == doc_id))
-    else:
-        result = await db.execute(select(Reading_Documents).where(Reading_Documents.docs_id == doc_id, Reading_Documents.docs_owner == current_user.user_id))
-    document = result.scalar_one_or_none()
-
-    if document is None:
+    result = await db.execute(
+        select(Reading_Documents, User.user_role).join(User, Reading_Documents.docs_owner == User.user_id).where(Reading_Documents.docs_id == doc_id)
+    )
+    row = result.first()
+    if row is None:
         raise DocumentNotFound()
-    
+    document, owner_role = row
+    if current_user.user_role == "user" and document.docs_owner != current_user.user_id:
+        raise PermissionException()
+    if current_user.user_role == "moderator" and document.docs_owner != current_user.user_id and owner_role != "user":
+        raise PermissionException()
     deleted = await delete_file_from_s3(document.docs_file_path)
     if not deleted:
         raise FileDeletionFailed()
-    
     await db.delete(document)
     await db.commit()
 

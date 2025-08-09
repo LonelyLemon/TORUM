@@ -30,7 +30,14 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        <Route path="/view-post/:id" element={<PostDetail />} />
+        <Route 
+          path="/view-post/:id"   
+          element={
+            <ProtectedRoute>
+              <PostDetail />
+            </ProtectedRoute>
+          } 
+        />
         <Route 
           path="/view-post"
           element={

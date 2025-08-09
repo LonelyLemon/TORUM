@@ -34,12 +34,13 @@ export interface SignupCredentials {
 /*---------------------------------------------------------------*/
 
 export interface Post {
+    owner_role?: string;
     post_id: string;
     post_owner: string;
     post_title: string;
     post_content: string;
     created_at: string;
-    updated_at: string;
+    updated_at: string | null;
 };
 
 export interface PostCreate {

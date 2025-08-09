@@ -68,6 +68,11 @@ export const getMyPosts = async(): Promise<Post[]> => {
   return response.data;
 }
 
+export const getPostById = async(id: string): Promise<Post> => {
+  const response = await api.get(`/view-post/${id}`);
+  return response.data;
+}
+
 export const updatePost = async (id: string, post: PostUpdate): Promise<{ message: string | undefined}> => {
   const response = await api.put(`/update-post/${id}`, post);
   return response.data;
