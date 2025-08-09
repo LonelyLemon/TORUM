@@ -12,7 +12,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      
+
   backend:
     build:
       context: .
@@ -31,14 +31,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        - VITE_API_BASE_URL=http://ec2-3-106-239-219.ap-southeast-2.compute.amazonaws.com:8000
     ports:
       - "5173:5173"
     volumes:
       - ./frontend:/app/frontend
+    env_file:
+      - ./frontend/.env.production
     stdin_open: true
     tty: true
-
-volumes:
-  postgres_data:
