@@ -1,4 +1,4 @@
-from pydantic import Extra
+from pydantic import Extra, EmailStr
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 from pathlib import Path
@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     AWS_ACCESS_KEY: str
     AWS_REGION: str
     S3_BUCKET: str
+
+    # Admin user (optional)
+    ADMIN_USERNAME: str
+    ADMIN_EMAIL: EmailStr
+    ADMIN_PASSWORD: str
 
     class Config:
         env_file = Path(__file__).resolve().parents[2]/".env"
