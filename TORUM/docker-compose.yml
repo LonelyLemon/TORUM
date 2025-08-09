@@ -39,3 +39,6 @@ services:
       - ./frontend/.env.production
     stdin_open: true
     tty: true
+
+volumes:
+  postgres_data:
