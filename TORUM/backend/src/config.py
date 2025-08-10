@@ -1,5 +1,6 @@
-from pydantic import Extra, EmailStr
+from pydantic import Extra, EmailStr, Field
 from pydantic_settings import BaseSettings
+from typing import Optional
 from functools import lru_cache
 from pathlib import Path
 
@@ -25,9 +26,9 @@ class Settings(BaseSettings):
     S3_BUCKET: str
 
     # Admin user (optional)
-    ADMIN_USERNAME: str
-    ADMIN_EMAIL: EmailStr
-    ADMIN_PASSWORD: str
+    ADMIN_USERNAME: Optional[str] = Field(default=None)
+    ADMIN_EMAIL: Optional[EmailStr] = Field(default=None)
+    ADMIN_PASSWORD: Optional[str] = Field(default=None)
 
     class Config:
         env_file = Path(__file__).resolve().parents[2]/".env"
