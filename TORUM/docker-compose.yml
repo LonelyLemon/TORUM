@@ -12,6 +12,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks: [app]
 
   backend:
     build:
@@ -26,6 +27,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks: [app]
 
   frontend:
     build:
@@ -39,6 +41,7 @@ services:
       - ./frontend/.env.production
     stdin_open: true
     tty: true
+    networks: [app]
 
   nginx:
     image: nginx:1.27-alpine
@@ -52,6 +55,7 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
+    networks: [app]
 
   certbot:
     image: certbot/certbot:latest
@@ -60,6 +64,10 @@ services:
       - ./certbot/conf:/etc/letsencrypt
     entrypoint: /bin/sh
     command: -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot && echo "Renew checked"; sleep 12h; done'
+    networks: [app]
+  
+networks:
+  app:
 
 volumes:
   postgres_data:
