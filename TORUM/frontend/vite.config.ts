@@ -8,7 +8,8 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     allowedHosts: [
-      'ec2-3-106-239-219.ap-southeast-2.compute.amazonaws.com'
+      'ec2-3-106-239-219.ap-southeast-2.compute.amazonaws.com',
+      'tforum.duckdns.org'
     ]
   },
   envPrefix: 'VITE_',
