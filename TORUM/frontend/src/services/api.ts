@@ -8,7 +8,7 @@ import type { User, UserUpdate,
             } from "../types/index";
 
 export const api = axios.create ({
-    baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000",
+    baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
 });
 
 api.interceptors.request.use(async (config) => {
